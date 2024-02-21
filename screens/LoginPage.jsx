@@ -2,40 +2,15 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 import { AntDesign } from '@expo/vector-icons';
-import React, { useState } from 'react'
-import { collection, doc, setDoc, getDocs, query, where } from "firebase/firestore";
-import { db } from '../firebase/firebaseInit';
+import React, { useContext, useState } from 'react'
+import { AuthContext } from '../context/AuthProvider';
 
 const LoginPage = ({ navigation }) => {
 
-  const [isLoading, setIsLoading] = useState(false);
-
-  function getUserInDb() {
-    setIsLoading(true)
-    getDocs(query(
-      collection(db, 'users')
-      , where('email', '==', 'test@gmail.com')
-    )).then(ds => {
-      setIsLoading(false)
-      if (ds.size > 0) {
-        const user = ds.docs[0].data();
-        console.log(user)
-        // Alert.alert('Error', 'User Found')
-        navigation.navigate('Home');
-      } else {
-        Alert.alert('Error', 'User Not Found')
-      }
-    })
-  }
-
+  const { login, isLoading } = useContext(AuthContext);
 
   function goToSignUpPage() {
     navigation.navigate('SignUp');
-  }
-
-  function goToHomePage() {
-    getUserInDb()
-
   }
 
   function LoginForm() {
@@ -65,15 +40,18 @@ const LoginPage = ({ navigation }) => {
             onChangeText={setPassword} />
         </View>
 
+        <SignButton email={email} password={password} />
       </View>
     );
   }
 
-  function SignButton() {
+  function SignButton(props) {
+    const { email, password } = props;
+
     return (
       <View style={styles.buttonContainer}>
         <Text style={styles.loginText}>Sign in</Text>
-        <TouchableOpacity style={styles.loginButton} onPress={() => goToHomePage()}>
+        <TouchableOpacity style={styles.loginButton} onPress={() => login(email, password)}>
           {isLoading ? (
             <ActivityIndicator color='white' size={30}></ActivityIndicator>
           ) : (
@@ -104,8 +82,6 @@ const LoginPage = ({ navigation }) => {
 
       <KeyboardAwareScrollView keyboardShouldPersistTaps={"never"}>
         <LoginForm />
-
-        <SignButton />
 
         <FooterLinks />
       </KeyboardAwareScrollView>
